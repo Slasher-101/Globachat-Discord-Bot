@@ -1,6 +1,6 @@
 """
-autotranslate-bot
-------------------
+GlobaChat
+---------
 A minimal Discord bot that watches messages and automatically replies with a
 translation whenever a message isn't already in the server's target
 language. DeepL is used as the primary backend (higher quality, needs an API
@@ -46,10 +46,10 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler(LOG_DIR / "autotranslate.log", encoding="utf-8"),
+        logging.FileHandler(LOG_DIR / "globachat.log", encoding="utf-8"),
     ],
 )
-log = logging.getLogger("autotranslate")
+log = logging.getLogger("globachat")
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 DEEPL_API_KEY = os.getenv("DEEPL_API_KEY")
@@ -358,7 +358,7 @@ async def translate(text: str, target_lang: str):
 
 intents = discord.Intents.default()
 intents.message_content = True  # must also be enabled in the Dev Portal
-bot = commands.Bot(command_prefix="!autotranslate ", intents=intents, help_command=None)
+bot = commands.Bot(command_prefix="!globachat ", intents=intents, help_command=None)
 
 # --------------------------------------------------------------------------
 # Slash commands: /autotranslate ... - lets server admins adjust settings

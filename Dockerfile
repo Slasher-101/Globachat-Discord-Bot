@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY bot.py .
 
 # Run as a non-root user
-RUN useradd -m -u 1000 autotranslate && chown -R autotranslate:autotranslate /app
-USER autotranslate
+RUN useradd -m -u 1000 globachat && chown -R globachat:globachat /app
+USER globachat
 
 ENTRYPOINT ["python", "-u", "bot.py"]

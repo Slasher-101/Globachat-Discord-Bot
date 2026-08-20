@@ -1,11 +1,11 @@
 version: '3.8'
 
 services:
-  autotranslate-bot:
+  globachat:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: autotranslate-bot
+    container_name: globachat
     restart: unless-stopped
 
     environment:
