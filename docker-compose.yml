@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  autotranslate-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: autotranslate-bot
+    restart: unless-stopped
+
+    environment:
+      # Required: Discord bot token
+      DISCORD_TOKEN: ${DISCORD_TOKEN:?DISCORD_TOKEN is required, set it in .env}
+      # Optional but recommended: DeepL API key (falls back to Google Translate if unset)
+      DEEPL_API_KEY: ${DEEPL_API_KEY:-}
+
+    volumes:
+      # Persist per-server configuration
+      - ./config.ini:/app/config.ini
+      # Persist logs
+      - ./logs:/app/logs
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
