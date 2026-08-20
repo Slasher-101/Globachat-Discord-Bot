@@ -13,10 +13,7 @@ For every non-bot message with real text content:
 1. Strip URLs, mentions, and custom emoji before checking length.
 2. Skip if what's left is shorter than `min_chars` (avoids false triggers on
    "lol", "ok", emoji-only messages, etc.) or common chat slang.
-3. For short messages (5 words or fewer), skip if every word is already a
-   recognized, common word in the target language according to real-world
-   frequency data ([wordfreq](https://github.com/rspeer/wordfreq).
-4. Run local language detection (via [Lingua](https://github.com/pemistahl/lingua-py),
+3. Run local language detection (via [Lingua](https://github.com/pemistahl/lingua-py),
    no API call) restricted to only the languages this bot supports as
    targets. If the detected language already matches `target_lang`, or its
    lead over the runner-up guess is below `confidence_threshold`%, nothing
@@ -24,7 +21,7 @@ For every non-bot message with real text content:
    deliberately: short text spreads probability thin across every candidate
    language, so a real foreign phrase and a misidentified English fragment
    can land at similarly low raw scores.
-5. Only once local detection is confident it's genuinely a different
+4. Only once local detection is confident it's genuinely a different
    language does the message actually get sent to DeepL/Google to translate,
    and reply in-thread with the result.
 

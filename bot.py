@@ -24,7 +24,6 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from lingua import Language, LanguageDetectorBuilder
-from wordfreq import zipf_frequency
 
 try:
     import deepl
@@ -246,57 +245,6 @@ def is_common_slang(cleaned: str) -> bool:
     if not tokens:
         return False
     return all(_normalize_slang(t) in COMMON_SLANG for t in tokens)
-
-
-# --------------------------------------------------------------------------
-# Word-frequency check (catches slang/informal words COMMON_SLANG doesn't
-# know about yet, without needing to hand-list them)
-# --------------------------------------------------------------------------
-# COMMON_SLANG only knows what's been manually added to it, so every new
-# slang term needs a code change to be recognized. wordfreq
-# (https://github.com/rspeer/wordfreq) gives real per-word frequency data
-# pulled from actual usage - for English that includes Twitter, Reddit, and
-# subtitles, so common internet slang typically already has a real
-# frequency score without needing to be added by hand. Rather than ask
-# "which of the supported languages does this resemble" (what Lingua does,
-# and what's unreliable on very short/informal text), this asks a
-# different, more direct question for short messages: "is every word here
-# already a recognized, reasonably common word in the target language?" If
-# so, skip translating - no statistical guessing needed. Only applied to
-# short messages; once there's real sentence structure, Lingua's
-# statistical detection has enough signal to be reliable on its own (and
-# translating a few too many short words is a much smaller cost than
-# mistranslating a real sentence).
-WORD_FREQ_MIN_ZIPF = 2.0  # zipf_frequency scale: ~7 for "the", ~0 for unrecognized words
-SHORT_MESSAGE_MAX_WORDS = 5
-
-
-def token_zipf_scores(cleaned: str, target_lang: str) -> list:
-    """Returns [(token, zipf_score), ...] for each word in the message,
-    scored against the target language. Stretched-out spellings are
-    collapsed the same way COMMON_SLANG matching does before lookup."""
-    tokens = re.findall(r"[^\W\d_]+", cleaned.lower(), flags=re.UNICODE)
-    lang = target_lang.split("-")[0].lower()
-    scores = []
-    for t in tokens:
-        normalized = _normalize_slang(t)
-        try:
-            score = zipf_frequency(normalized, lang)
-        except Exception as e:
-            log.warning("wordfreq lookup failed for %r (%s): %s", normalized, lang, e)
-            score = 0.0
-        scores.append((normalized, score))
-    return scores
-
-
-def is_common_word_in_target(word_scores: list) -> bool:
-    """True if this is a short message (<= SHORT_MESSAGE_MAX_WORDS words)
-    where every word is already a recognized, common word in the target
-    language - meaning it's not worth running through language detection
-    at all, let alone translating."""
-    if not word_scores or len(word_scores) > SHORT_MESSAGE_MAX_WORDS:
-        return False
-    return all(score >= WORD_FREQ_MIN_ZIPF for _, score in word_scores)
 
 
 def langs_match(detected: str, target: str) -> bool:
@@ -644,15 +592,6 @@ async def on_message(message: discord.Message):
 
     if is_common_slang(cleaned):
         return  # recognized chat slang/interjection - not worth (mis)translating
-
-    word_scores = token_zipf_scores(cleaned, settings["target_lang"])
-    if len(word_scores) <= SHORT_MESSAGE_MAX_WORDS:
-        log.info(
-            "[wordfreq] %r -> %s target=%s min_zipf=%.1f",
-            cleaned, word_scores, settings["target_lang"], WORD_FREQ_MIN_ZIPF,
-        )
-    if is_common_word_in_target(word_scores):
-        return  # short message, every word already a recognized word in the target language
 
     detected_code, confidence, runner_up_code, runner_up_conf = detect_with_confidence(cleaned)
     margin = confidence - runner_up_conf
