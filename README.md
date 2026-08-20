@@ -1,4 +1,4 @@
-# autotranslate-bot
+# Globachat Automatic Translation Bot
 
 A minimal Discord bot that watches messages and automatically replies with a
 translation whenever a message isn't already in the server's target
